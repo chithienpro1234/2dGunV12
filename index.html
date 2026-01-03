@@ -3409,19 +3409,37 @@
             }
         }
         function toggleSkill(skillNum, btnElement) {
-            if (isPaused || activeSupplyDrop) return; if (turn !== 'PLAYER' || gameState !== 'PLAYING') return;
+            if (isPaused || activeSupplyDrop) return; 
+            if (turn !== 'PLAYER' || gameState !== 'PLAYING') return;
             if (!btnElement.classList.contains('unlocked') || btnElement.classList.contains('used')) return;
             
+            // --- [FIX] ĐƯA LOGIC SKILL 4 LÊN ĐẦU ---
+            // Kiểm tra nếu là Skill 4 (Gọi thính) thì thực hiện ngay và return
+            // Không chạy xuống dòng reset khiên ở dưới
+            if (skillNum === 4) { 
+                spawnSupplyDrop(); 
+                skill4Uses--; 
+                showFloatingText("GỌI TIẾP TẾ!", player.x, player.y - 80, '#fff'); 
+                updateUI(); 
+                return; 
+            }
+
+            // --- SAU ĐÓ MỚI RESET KHIÊN CHO CÁC SKILL KHÁC ---
+            // Dòng này chỉ nên chạy khi bạn đổi sang Skill 1, 2 hoặc tắt Skill 3
             player.isShielded = false;
 
-            if (skillNum === 4) { spawnSupplyDrop(); skill4Uses--; showFloatingText("GỌI TIẾP TẾ!", player.x, player.y - 80, '#fff'); updateUI(); return; }
             if (activeSkill === skillNum) { 
                 activeSkill = null; btnElement.classList.remove('active'); 
                 if (skillNum === 2 && player instanceof LaserTank) { 
                     for (let i = bullets.length - 1; i >= 0; i--) { if (bullets[i].type === 'SATELLITE') bullets.splice(i, 1); }
                 }
             } else { 
-                activeSkill = skillNum; btnSkill1.classList.remove('active'); btnSkill2.classList.remove('active'); btnSkill3.classList.remove('active'); btnSkill4.classList.remove('active'); btnElement.classList.add('active'); 
+                activeSkill = skillNum; 
+                btnSkill1.classList.remove('active'); 
+                btnSkill2.classList.remove('active'); 
+                btnSkill3.classList.remove('active'); 
+                btnSkill4.classList.remove('active'); 
+                btnElement.classList.add('active'); 
                 
                 if (activeSkill === 3) { player.activateShield(); }
                 if (activeSkill === 2 && player instanceof LaserTank) { player.deploySatellite(); showFloatingText("VỆ TINH SẴN SÀNG!", player.x, player.y - 80, '#d500f9'); }
@@ -3454,4 +3472,5 @@
         init();
     </script>
 </body>
+
 </html>
