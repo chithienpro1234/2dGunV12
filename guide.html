@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Nang Chiến Thuật - Army Battle 2D PvP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent-green: #00e676;
+            --accent-red: #ff5252;
+            --accent-yellow: #ffea00;
+            --accent-blue: #2979ff;
+            --accent-purple: #d500f9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding-bottom: 80px; }
+        
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        
+        /* HEADER */
+        header { text-align: center; margin-bottom: 40px; padding: 20px 0; border-bottom: 1px solid #333; }
+        h1 { color: var(--accent-green); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; font-size: 28px; }
+        .subtitle { color: var(--text-muted); font-style: italic; font-size: 14px; }
+
+        /* SECTIONS */
+        section { margin-bottom: 50px; animation: fadeIn 0.5s ease-out; }
+        .sec-title { 
+            font-size: 20px; color: var(--accent-yellow); border-left: 4px solid var(--accent-yellow); 
+            padding-left: 15px; margin-bottom: 20px; text-transform: uppercase; font-weight: bold;
+        }
+
+        /* SECTION 1: FORMULA */
+        .formula-box {
+            background: linear-gradient(135deg, #222, #111);
+            border: 1px solid #444; border-radius: 8px; padding: 20px;
+            display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px;
+            text-align: center;
+        }
+        .f-item { padding: 10px 15px; background: #333; border-radius: 5px; font-weight: bold; font-size: 14px; position: relative; }
+        .f-plus { color: #888; font-weight: bold; font-size: 18px; }
+        .f-result { background: var(--accent-red); color: white; box-shadow: 0 0 10px rgba(255, 82, 82, 0.4); }
+        .f-desc { width: 100%; text-align: center; margin-top: 15px; font-size: 13px; color: #888; font-style: italic; }
+
+        /* SECTION 2: TANKS */
+        .tank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .tank-card { background: var(--card-bg); border-radius: 8px; overflow: hidden; border: 1px solid #333; transition: transform 0.2s; }
+        .tank-card:hover { border-color: #555; transform: translateY(-3px); }
+        
+        .tc-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: #fff; }
+        .tc-content { padding: 15px; }
+        
+        /* Tank Colors */
+        .h-artillery { background: linear-gradient(90deg, #b71c1c, #2c0b0b); }
+        .h-machine { background: linear-gradient(90deg, #f57f17, #312202); }
+        .h-laser { background: linear-gradient(90deg, #7b1fa2, #1f0529); }
+        .h-boomerang { background: linear-gradient(90deg, #33691e, #0c1a05); }
+        .h-commando { background: linear-gradient(90deg, #455a64, #10171a); }
+
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; color: #aaa; padding-bottom: 8px; border-bottom: 1px solid #444; font-size: 11px; text-transform: uppercase; }
+        td { padding: 8px 0; border-bottom: 1px solid #333; vertical-align: middle; }
+        td:last-child { text-align: right; font-weight: bold; color: var(--accent-green); }
+        .unlock-req { font-size: 10px; color: var(--accent-red); background: rgba(255, 82, 82, 0.1); padding: 2px 5px; border-radius: 3px; margin-left: 5px; }
+
+        /* SECTION 3: BUFFS */
+        .buff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .buff-item { background: #222; padding: 15px; border-radius: 6px; border-left: 3px solid #555; }
+        .buff-title { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
+        .buff-desc { font-size: 12px; color: #aaa; }
+        
+        .b-angle { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .b-dist { border-color: var(--accent-purple); color: var(--accent-purple); }
+        .b-dmg { border-color: var(--accent-red); color: var(--accent-red); }
+        .b-hp { border-color: var(--accent-green); color: var(--accent-green); }
+        .b-giant { border-color: #e040fb; color: #e040fb; }
+        .b-shield { border-color: #00e5ff; color: #00e5ff; }
+
+        /* SECTION 4: TIPS */
+        .tips-list { list-style: none; }
+        .tips-list li { margin-bottom: 10px; padding-left: 20px; position: relative; font-size: 14px; }
+        .tips-list li::before { content: "➤"; position: absolute; left: 0; color: var(--accent-green); }
+
+        /* FOOTER BUTTON */
+        .play-btn-container { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px; background: rgba(0,0,0,0.9); text-align: center; border-top: 1px solid #333; backdrop-filter: blur(5px); }
+        .play-btn { 
+            display: inline-block; padding: 12px 40px; background: linear-gradient(45deg, #00e676, #00c853); 
+            color: #000; font-weight: bold; text-decoration: none; border-radius: 30px; 
+            font-size: 18px; box-shadow: 0 0 15px rgba(0, 230, 118, 0.5); transition: all 0.2s;
+        }
+        .play-btn:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(0, 230, 118, 0.8); }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        @media (max-width: 600px) {
+            .formula-box { flex-direction: column; gap: 5px; }
+            .f-plus { transform: rotate(90deg); margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-book"></i> Cẩm Nang Chiến Trường</h1>
+            <div class="subtitle">Dữ liệu Core Game - Chế độ PvP</div>
+        </header>
+
+        <section>
+            <div class="sec-title"><i class="fas fa-calculator"></i> 1. Cơ Chế Tính Sát Thương</div>
+            <div class="formula-box">
+                <div class="f-item" style="color: #fff;">Sát Thương Gốc</div>
+                <div class="f-plus">+</div>
+                <div class="f-item" style="color: #00e676;">Random (0~5)</div>
+                <div class="f-plus">x</div>
+                <div class="f-item" style="color: var(--accent-yellow);">Buff Góc & Xa</div>
+                <div class="f-plus">x</div>
+                <div class="f-item" style="color: var(--accent-red);">Buff Item</div>
+                <div class="f-plus">=</div>
+                <div class="f-item f-result">DAMAGE CUỐI</div>
+                <div class="f-desc">
+                    * Ví dụ: Đạn gốc 35 + Random 5 = 40. Bắn góc siêu cao (+15%) -> 46. Ăn thêm x2 Damage -> <b>92 Máu!</b>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="sec-title"><i class="fas fa-tank"></i> 2. Thông Tin Chiến Xa & Kỹ Năng</div>
+            <div class="tank-grid">
+                
+                <div class="tank-card">
+                    <div class="tc-header h-artillery">
+                        <span>PHÁO KÍCH (Artillery)</span> <i class="fas fa-crosshairs"></i>
+                    </div>
+                    <div class="tc-content">
+                        <table>
+                            <tr><th>Loại Đạn</th><th>Số lượng</th><th>Base + Random</th><th>Min - Max</th></tr>
+                            <tr><td>Đạn Thường</td><td>1</td><td>35 + (0~5)</td><td>35 - 40</td></tr>
+                            <tr>
+                                <td>Skill 1 <span class="unlock-req">&lt;80% HP</span></td>
+                                <td>3</td><td>26 + (0~5)</td><td>26 - 31 <small>/viên</small></td>
+                            </tr>
+                            <tr>
+                                <td>Skill 2 <span class="unlock-req">&lt;60% HP</span></td>
+                                <td>1</td><td>75 + (0~5)</td><td>75 - 80</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tank-card">
+                    <div class="tc-header h-machine">
+                        <span>SÚNG MÁY (Machine Gun)</span> <i class="fas fa-fighter-jet"></i>
+                    </div>
+                    <div class="tc-content">
+                        <table>
+                            <tr><th>Loại Đạn</th><th>Số lượng</th><th>Base + Random</th><th>Min - Max</th></tr>
+                            <tr><td>Đạn Thường</td><td>3</td><td>11 + (0~5)</td><td>11 - 16 <small>/viên</small></td></tr>
+                            <tr>
+                                <td>Skill 1 <span class="unlock-req">&lt;80% HP</span></td>
+                                <td>6</td><td>12 + (0~5)</td><td>12 - 17 <small>/viên</small></td>
+                            </tr>
+                            <tr>
+                                <td>Skill 2 <span class="unlock-req">&lt;60% HP</span></td>
+                                <td>3</td><td>24 + (0~5)</td><td>24 - 29 <small>/viên</small></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tank-card">
+                    <div class="tc-header h-boomerang">
+                        <span>BOOMERANG</span> <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <div class="tc-content">
+                        <table>
+                            <tr><th>Loại Đạn</th><th>Hiệu ứng</th><th>Base + Random</th><th>Min - Max</th></tr>
+                            <tr><td>Móc Câu</td><td>Cong</td><td>45 + (0~5)</td><td>45 - 50</td></tr>
+                            <tr>
+                                <td>Skill 1 <span class="unlock-req">&lt;80% HP</span></td>
+                                <td>3 Tia</td><td>30 + (0~5)</td><td>30 - 35 <small>/viên</small></td>
+                            </tr>
+                            <tr>
+                                <td>Skill 2 <span class="unlock-req">&lt;60% HP</span></td>
+                                <td>Nhân 2</td><td>(35 + 0~5) x2</td><td>70 - 80</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tank-card">
+                    <div class="tc-header h-laser">
+                        <span>XE LASER</span> <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="tc-content">
+                        <table>
+                            <tr><th>Loại Đạn</th><th>Cơ chế</th><th>Base + Random</th><th>Min - Max</th></tr>
+                            <tr><td>Tia Laser</td><td>Thẳng</td><td>40 + (0~5)</td><td>40 - 45</td></tr>
+                            <tr>
+                                <td>Skill 1 <span class="unlock-req">&lt;80% HP</span></td>
+                                <td>Mưa 4 tia</td><td>25 + (0~5)</td><td>25 - 30 <small>/tia</small></td>
+                            </tr>
+                            <tr>
+                                <td>Skill 2 <span class="unlock-req">&lt;60% HP</span></td>
+                                <td>Vệ Tinh</td><td>75 + (0~5)</td><td>75 - 80</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tank-card">
+                    <div class="tc-header h-commando">
+                        <span>ĐẶC NHIỆM (Commando)</span> <i class="fas fa-bomb"></i>
+                    </div>
+                    <div class="tc-content">
+                        <table>
+                            <tr><th>Loại Đạn</th><th>Số Bom</th><th>Base + Random</th><th>Min - Max</th></tr>
+                            <tr><td>Đạn Thường</td><td>1</td><td>30 + (0~5)</td><td>30 - 35</td></tr>
+                            <tr>
+                                <td>Skill 1 <span class="unlock-req">&lt;80% HP</span></td>
+                                <td>Rải thảm 5</td><td>18 + (0~5)</td><td>18 - 23 <small>/quả</small></td>
+                            </tr>
+                            <tr>
+                                <td>Skill 2 <span class="unlock-req">&lt;60% HP</span></td>
+                                <td>Nuke</td><td>70 + (0~5)</td><td>70 - 75</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <div style="text-align: center; margin-top: 15px; font-size: 13px; color: #888;">
+                * <b>Skill 3 (Khiên):</b> Mở khóa khi HP &lt; 40%. Chặn hoàn toàn 1 đòn đánh.<br>
+                * <b>Skill 4 (Tiếp Tế):</b> Mở khóa khi HP &lt; 50%. Gọi hòm thính (Tối đa 2 lần/trận).
+            </div>
+        </section>
+
+        <section>
+            <div class="sec-title"><i class="fas fa-arrow-up"></i> 3. Hệ Thống Buff & Item (PvP Core)</div>
+            <div class="buff-grid">
+                <div class="buff-item b-angle">
+                    <div class="buff-title"><i class="fas fa-angle-double-up"></i> Góc Siêu Cao</div>
+                    <div class="buff-desc">Đạn càng đi cao dame càng nhiều. Tối đa +<b>15%</b> sát thương.</div>
+                </div>
+                <div class="buff-item b-dist">
+                    <div class="buff-title"><i class="fas fa-bullseye"></i> Xạ Thủ (Sniper)</div>
+                    <div class="buff-desc">Khoảng cách bay > 800px. Tăng <b>10%</b> sát thương.</div>
+                </div>
+                <div class="buff-item b-dmg">
+                    <div class="buff-title"><i class="fas fa-fire"></i> Đạn Cường Hóa</div>
+                    <div class="buff-desc">Item (Hòm đỏ). Nhân đôi <b>(x2)</b> sát thương cho lượt bắn sau.</div>
+                </div>
+                <div class="buff-item b-hp">
+                    <div class="buff-title"><i class="fas fa-heart"></i> Hồi Máu</div>
+                    <div class="buff-desc">Item (Hòm xanh). Hồi <b>15 HP</b> (Core PvP Setting).</div>
+                </div>
+                <div class="buff-item b-giant">
+                    <div class="buff-title"><i class="fas fa-expand-arrows-alt"></i> Khổng Lồ Hóa</div>
+                    <div class="buff-desc">Item (Hòm tím). Hồi 50 HP/MaxHP. Tăng <b>50% Damage</b> gây ra & <b>Giảm 20% Damage</b> nhận vào.</div>
+                </div>
+                <div class="buff-item b-shield">
+                    <div class="buff-title"><i class="fas fa-shield-alt"></i> Khiên Bảo Vệ</div>
+                    <div class="buff-desc">Skill 3. Chặn hoàn toàn <b>1 lần</b> sát thương bất kỳ.</div>
+                </div>
+                <div class="buff-item" style="border-color: #2979ff; color: #2979ff;">
+                    <div class="buff-title"><i class="fas fa-plus-circle"></i> Thêm Lượt</div>
+                    <div class="buff-desc">Item (Hòm xanh dương). Được bắn tiếp ngay lập tức.</div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="sec-title"><i class="fas fa-lightbulb"></i> 4. Mẹo Chiến Thắng</div>
+            <ul class="tips-list">
+                <li><b>Khiên có thể bị khắc chế:</b> Dùng các nhân vật hoặc chiêu có số lượng đạn nhiều hơn 2 viên khiến khiên bể trước khi nhận sát thương các viên đạn còn lại</li>
+                <li><b>Tôi ưu hoá sát thương</b> Tận dụng khoảng cách và góc bắn cao để nhận thêm sát thương</li>
+                <li><b>Combo Hủy Diệt:</b> Chiêu 2 + compo thính x2 dame chính là cách huỷ diêt đối thủ 1 cách bất ngờ</li>
+            </ul>
+        </section>
+
+        <div style="height: 60px;"></div> </div>
+
+    <div class="play-btn-container">
+        <a href="2dGunPvP.html" class="play-btn"><i class="fas fa-gamepad"></i> VÀO GAME CHIẾN NGAY</a>
+    </div>
+
+</body>
+</html>
